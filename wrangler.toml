@@ -1,0 +1,19 @@
+name = "discord-feed"
+main = "src/index.ts"
+compatibility_date = "2025-01-06"
+
+# Disable preview URLs
+preview_urls = false
+
+# Enable observability (logging)
+[observability]
+enabled = true
+
+# KV Namespace binding
+[[kv_namespaces]]
+binding = "KV"
+id = ""  # Set after running: wrangler kv namespace create FEED_KV
+
+# Cron Trigger - every 15 minutes
+[triggers]
+crons = ["*/15 * * * *"]
