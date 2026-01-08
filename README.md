@@ -1,13 +1,19 @@
-# discord-feed
+<p align="center">
+  <img src="icon.png" alt="discord-feed" width="128" height="128">
+</p>
+
+<h1 align="center">discord-feed</h1>
 
 A Discord bot that monitors RSS/Atom feeds and posts updates to Discord channels, running on Cloudflare Workers.
 
 ## Features
 
-- **Slash Commands**: Manage feeds with `/feed add`, `/feed remove`, `/feed list`
+- **Slash Commands**: Manage feeds with `/feed add`, `/feed remove`, `/feed list`, `/feed test`
 - **Multi-server support**: Works across multiple Discord servers
 - **RSS/Atom support**: Compatible with RSS 2.0, RSS 1.0 (RDF), and Atom feeds
-- **Rich embeds**: Posts feed updates as Discord embeds with title, description, and link
+- **Rich embeds**: Posts feed updates as Discord embeds with title, description, link, and images
+- **Feed status**: Shows feed titles and error status in list command
+- **Batch operations**: Add/remove multiple feeds at once
 - **Serverless**: Runs on Cloudflare Workers with KV storage
 
 ## Setup
@@ -96,14 +102,19 @@ Interactions Endpoint URL: https://discord-feed.<your-subdomain>.workers.dev/int
 
 | Command | Description |
 |---------|-------------|
-| `/feed add <url>` | Register a feed to the current channel |
-| `/feed remove <url>` | Remove a feed from the current channel |
-| `/feed list` | List all registered feeds in the current channel |
+| `/feed add <url>` | Register feeds (supports multiple URLs separated by spaces) |
+| `/feed remove <url>` | Remove feeds by URL or number from list (supports multiple) |
+| `/feed list` | List registered feeds with titles and error status |
+| `/feed test <url>` | Test a feed by posting 1 item (accepts URL or number) |
 
-### Example
+### Examples
 
 ```
 /feed add https://example.com/feed.xml
+/feed add https://example.com/feed1.xml https://example.com/feed2.xml
+/feed remove 1
+/feed remove 1 2 3
+/feed test 1
 ```
 
 ## Development

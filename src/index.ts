@@ -37,7 +37,7 @@ app.post("/interactions", async (c) => {
   }
 
   const interaction = JSON.parse(body);
-  return handleInteraction(interaction, c.get("store"));
+  return handleInteraction(interaction, c.get("store"), c.get("discord"));
 });
 
 // Health check
@@ -93,6 +93,14 @@ app.post("/register", async (c) => {
           type: 1, // SUB_COMMAND
           name: "list",
           description: "List registered feeds",
+        },
+        {
+          type: 1, // SUB_COMMAND
+          name: "test",
+          description: "Test a feed (post 1 item without updating state)",
+          options: [
+            { type: 3, name: "url", description: "Feed URL or number from list", required: true },
+          ],
         },
       ],
     },

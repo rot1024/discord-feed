@@ -50,6 +50,7 @@ export class DiscordAPI {
         text: feedTitle,
       },
       timestamp: item.pubDate,
+      image: item.image ? { url: item.image } : undefined,
     };
 
     await this.sendMessage(channelId, undefined, [embed]);

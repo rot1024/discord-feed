@@ -121,10 +121,28 @@ export class FeedStore {
   }
 
   // Save feed state
-  async setFeedState(url: string, lastItemId: string): Promise<void> {
+  async setFeedState(
+    url: string,
+    lastItemId: string,
+    options?: { title?: string; error?: string }
+  ): Promise<void> {
     const state: FeedState = {
       lastItemId,
       lastCheckedAt: new Date().toISOString(),
+      title: options?.title,
+      error: options?.error,
+    };
+    await this.kv.put(keys.feedState(url), JSON.stringify(state));
+  }
+
+  // Save feed error state
+  async setFeedError(url: string, error: string): Promise<void> {
+    const existing = await this.getFeedState(url);
+    const state: FeedState = {
+      lastItemId: existing?.lastItemId ?? "",
+      lastCheckedAt: new Date().toISOString(),
+      title: existing?.title,
+      error,
     };
     await this.kv.put(keys.feedState(url), JSON.stringify(state));
   }

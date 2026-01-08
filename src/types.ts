@@ -14,6 +14,8 @@ export interface FeedIndex {
 export interface FeedState {
   lastItemId: string; // guid or link of the latest item
   lastCheckedAt: string; // ISO8601
+  title?: string; // Feed title
+  error?: string; // Last error message if any
 }
 
 // Parsed feed item
@@ -23,6 +25,7 @@ export interface FeedItem {
   link: string;
   description?: string;
   pubDate?: string; // ISO8601
+  image?: string; // Image URL
 }
 
 // Parsed feed
@@ -42,6 +45,9 @@ export interface DiscordEmbed {
     text: string;
   };
   timestamp?: string;
+  image?: {
+    url: string;
+  };
 }
 
 // Environment variables

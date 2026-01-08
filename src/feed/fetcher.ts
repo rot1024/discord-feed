@@ -52,7 +52,9 @@ export class FeedFetcher {
       });
 
       if (!response.ok) {
-        return { url, channelId, status: "error", error: `HTTP ${response.status}` };
+        const error = `HTTP ${response.status}`;
+        await this.store.setFeedError(url, error);
+        return { url, channelId, status: "error", error };
       }
 
       const xml = await response.text();
@@ -77,7 +79,7 @@ export class FeedFetcher {
         } catch (error) {
           console.error(`Failed to send notification for ${latestItem.link}:`, error);
         }
-        await this.store.setFeedState(url, currentFirstId);
+        await this.store.setFeedState(url, currentFirstId, { title: feed.title });
         return { url, channelId, status: "first_run", newItems: 1 };
       }
 
@@ -85,7 +87,7 @@ export class FeedFetcher {
       const newItems = this.getNewItems(feed.items, lastItemId);
 
       if (newItems.length === 0) {
-        await this.store.setFeedState(url, currentFirstId);
+        await this.store.setFeedState(url, currentFirstId, { title: feed.title });
         return { url, channelId, status: "no_updates" };
       }
 
@@ -102,11 +104,12 @@ export class FeedFetcher {
       }
 
       // Save latest item ID
-      await this.store.setFeedState(url, feed.items[0].id);
+      await this.store.setFeedState(url, feed.items[0].id, { title: feed.title });
       return { url, channelId, status: "ok", newItems: itemsToNotify.length };
 
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      await this.store.setFeedError(url, message);
       return { url, channelId, status: "error", error: message };
     }
   }
