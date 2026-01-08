@@ -11,7 +11,7 @@ A Discord bot that monitors RSS/Atom feeds and posts updates to Discord channels
 - **Slash Commands**: Manage feeds with `/feed add`, `/feed remove`, `/feed list`, `/feed test`
 - **Multi-server support**: Works across multiple Discord servers
 - **RSS/Atom support**: Compatible with RSS 2.0, RSS 1.0 (RDF), and Atom feeds
-- **Rich embeds**: Posts feed updates as Discord embeds with title, description, link, and images
+- **OG preview**: Posts feed URLs that trigger Discord's rich link preview
 - **Feed status**: Shows feed titles and error status in list command
 - **Batch operations**: Add/remove multiple feeds at once
 - **Serverless**: Runs on Cloudflare Workers with KV storage

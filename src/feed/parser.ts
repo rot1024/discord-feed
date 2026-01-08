@@ -47,7 +47,6 @@ function parseRss(channel: RssChannel): ParsedFeed {
         link: item.link || "",
         description: item.description,
         pubDate: parseDate(item.pubDate),
-        image: extractImageFromRssItem(item),
       };
     }),
   };
@@ -79,7 +78,6 @@ function parseAtom(feed: AtomFeed): ParsedFeed {
         link: entryLink || "",
         description: getText(entry.summary) || getText(entry.content),
         pubDate: parseDate(entry.published || entry.updated),
-        image: extractImageFromAtomEntry(entry),
       };
     }),
   };
@@ -102,7 +100,6 @@ function parseRdf(rdf: RdfFeed): ParsedFeed {
       link: item.link || "",
       description: item.description,
       pubDate: parseDate(item["dc:date"]),
-      image: extractImageFromRdfItem(item),
     })),
   };
 }
@@ -126,66 +123,6 @@ function getText(value?: string | { "#text": string }): string | undefined {
   return value["#text"];
 }
 
-// Extract image URL from RSS item
-function extractImageFromRssItem(item: RssItem): string | undefined {
-  // Check enclosure with image type
-  if (item.enclosure?.["@_type"]?.startsWith("image/")) {
-    return item.enclosure["@_url"];
-  }
-  // Check media:content
-  if (item["media:content"]?.["@_url"]) {
-    const media = item["media:content"];
-    if (!media["@_type"] || media["@_type"].startsWith("image/")) {
-      return media["@_url"];
-    }
-  }
-  // Check media:thumbnail
-  if (item["media:thumbnail"]?.["@_url"]) {
-    return item["media:thumbnail"]["@_url"];
-  }
-  return undefined;
-}
-
-// Extract image URL from Atom entry
-function extractImageFromAtomEntry(entry: AtomEntry): string | undefined {
-  // Check link with enclosure rel and image type
-  const links = Array.isArray(entry.link) ? entry.link : entry.link ? [entry.link] : [];
-  const imageLink = links.find(
-    (l) => l["@_rel"] === "enclosure" && l["@_type"]?.startsWith("image/")
-  );
-  if (imageLink?.["@_href"]) {
-    return imageLink["@_href"];
-  }
-  // Check media:content
-  if (entry["media:content"]?.["@_url"]) {
-    const media = entry["media:content"];
-    if (!media["@_type"] || media["@_type"].startsWith("image/")) {
-      return media["@_url"];
-    }
-  }
-  // Check media:thumbnail
-  if (entry["media:thumbnail"]?.["@_url"]) {
-    return entry["media:thumbnail"]["@_url"];
-  }
-  return undefined;
-}
-
-// Extract image URL from RDF item
-function extractImageFromRdfItem(item: RdfItem): string | undefined {
-  // Check media:content
-  if (item["media:content"]?.["@_url"]) {
-    const media = item["media:content"];
-    if (!media["@_type"] || media["@_type"].startsWith("image/")) {
-      return media["@_url"];
-    }
-  }
-  // Check media:thumbnail
-  if (item["media:thumbnail"]?.["@_url"]) {
-    return item["media:thumbnail"]["@_url"];
-  }
-  return undefined;
-}
-
 // Type definitions for fast-xml-parser output
 interface RssChannel {
   title?: string;
@@ -199,17 +136,6 @@ interface RssItem {
   link?: string;
   description?: string;
   pubDate?: string;
-  enclosure?: {
-    "@_url"?: string;
-    "@_type"?: string;
-  };
-  "media:content"?: MediaContent;
-  "media:thumbnail"?: MediaContent;
-}
-
-interface MediaContent {
-  "@_url"?: string;
-  "@_type"?: string;
 }
 
 interface AtomFeed {
@@ -221,7 +147,6 @@ interface AtomFeed {
 interface AtomLink {
   "@_href"?: string;
   "@_rel"?: string;
-  "@_type"?: string;
 }
 
 interface AtomEntry {
@@ -232,8 +157,6 @@ interface AtomEntry {
   content?: string | { "#text": string };
   published?: string;
   updated?: string;
-  "media:content"?: MediaContent;
-  "media:thumbnail"?: MediaContent;
 }
 
 interface RdfFeed {
@@ -250,6 +173,4 @@ interface RdfItem {
   link?: string;
   description?: string;
   "dc:date"?: string;
-  "media:content"?: MediaContent;
-  "media:thumbnail"?: MediaContent;
 }

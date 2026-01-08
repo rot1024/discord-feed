@@ -25,7 +25,6 @@ export interface FeedItem {
   link: string;
   description?: string;
   pubDate?: string; // ISO8601
-  image?: string; // Image URL
 }
 
 // Parsed feed
@@ -33,21 +32,6 @@ export interface ParsedFeed {
   title: string;
   link: string;
   items: FeedItem[];
-}
-
-// Discord Embed
-export interface DiscordEmbed {
-  title: string;
-  url?: string;
-  description?: string;
-  color?: number;
-  footer?: {
-    text: string;
-  };
-  timestamp?: string;
-  image?: {
-    url: string;
-  };
 }
 
 // Environment variables
