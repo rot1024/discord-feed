@@ -1,3 +1,4 @@
+import { decode } from "html-entities";
 import type { DiscordEmbed, FeedItem } from "../types";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
@@ -55,9 +56,9 @@ export class DiscordAPI {
   }
 }
 
-// Strip HTML tags
+// Strip HTML tags and decode entities
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").trim();
+  return decode(html.replace(/<[^>]*>/g, "")).trim();
 }
 
 // Truncate string to max length

@@ -24,13 +24,15 @@ A Discord bot that monitors RSS/Atom feeds and posts updates to Discord channels
    - Select bot permissions: `Send Messages`
 7. Use the generated URL to invite the bot to your server
 
+> **Note:** The bot needs permission to **view the channel** where you register feeds. If the channel is private, make sure the bot's role has access to it in the channel settings.
+
 ### 2. Create KV Namespace
 
 ```bash
-wrangler kv namespace create FEED_KV
+npx wrangler kv namespace create FEED_KV
 ```
 
-Copy the output ID and set it in `wrangler.toml`:
+Copy the output ID and uncomment/update in `wrangler.toml`:
 
 ```toml
 [[kv_namespaces]]
@@ -38,19 +40,20 @@ binding = "KV"
 id = "your-kv-namespace-id"
 ```
 
-### 3. Set Secrets
-
-```bash
-wrangler secret put DISCORD_PUBLIC_KEY
-wrangler secret put DISCORD_BOT_TOKEN
-wrangler secret put DISCORD_APP_ID
-```
-
-### 4. Deploy
+### 3. Deploy
 
 ```bash
 npm install
 npm run deploy
+```
+
+### 4. Set Secrets
+
+```bash
+npx wrangler secret put DISCORD_PUBLIC_KEY
+npx wrangler secret put DISCORD_BOT_TOKEN
+npx wrangler secret put DISCORD_APP_ID
+npx wrangler secret put ADMIN_TOKEN  # Optional: protects /register and /trigger
 ```
 
 ### 5. Register Slash Commands
@@ -58,10 +61,28 @@ npm run deploy
 After deploying, register the slash commands by sending a POST request:
 
 ```bash
+# Without ADMIN_TOKEN
 curl -X POST https://discord-feed.<your-subdomain>.workers.dev/register
+
+# With ADMIN_TOKEN
+curl -X POST https://discord-feed.<your-subdomain>.workers.dev/register \
+  -H "Authorization: Bearer <your-admin-token>"
 ```
 
-### 6. Set Interactions Endpoint
+### 6. Manually Trigger Feed Check (Optional)
+
+You can manually trigger feed checking without waiting for the cron:
+
+```bash
+# Without ADMIN_TOKEN
+curl -X POST https://discord-feed.<your-subdomain>.workers.dev/trigger
+
+# With ADMIN_TOKEN
+curl -X POST https://discord-feed.<your-subdomain>.workers.dev/trigger \
+  -H "Authorization: Bearer <your-admin-token>"
+```
+
+### 7. Set Interactions Endpoint
 
 In Discord Developer Portal, go to **General Information** and set:
 

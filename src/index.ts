@@ -6,7 +6,24 @@ import { FeedStore } from "./kv/store";
 import { DiscordAPI } from "./discord/api";
 import { FeedFetcher } from "./feed/fetcher";
 
-const app = new Hono<{ Bindings: Env }>();
+type Variables = {
+  store: FeedStore;
+  discord: DiscordAPI;
+  fetcher: FeedFetcher;
+};
+
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// Initialize services middleware
+app.use("*", async (c, next) => {
+  const store = new FeedStore(c.env.KV);
+  const discord = new DiscordAPI(c.env.DISCORD_BOT_TOKEN);
+  const fetcher = new FeedFetcher(store, discord);
+  c.set("store", store);
+  c.set("discord", discord);
+  c.set("fetcher", fetcher);
+  await next();
+});
 
 // Discord Interactions endpoint
 app.post("/interactions", async (c) => {
@@ -20,9 +37,7 @@ app.post("/interactions", async (c) => {
   }
 
   const interaction = JSON.parse(body);
-  const store = new FeedStore(c.env.KV);
-
-  return handleInteraction(interaction, store);
+  return handleInteraction(interaction, c.get("store"));
 });
 
 // Health check
@@ -30,8 +45,29 @@ app.get("/", (c) => {
   return c.json({ status: "ok", name: "discord-feed" });
 });
 
+// Verify admin token
+function verifyAdminToken(c: { env: Env; req: { header: (name: string) => string | undefined } }): boolean {
+  const token = c.env.ADMIN_TOKEN;
+  if (!token) return true; // No token set = no auth required
+  const authHeader = c.req.header("Authorization");
+  return authHeader === `Bearer ${token}`;
+}
+
+// Manually trigger feed check
+app.post("/trigger", async (c) => {
+  if (!verifyAdminToken(c)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+  const result = await c.get("fetcher").checkAllFeeds();
+  console.log("Feed check triggered via API:", JSON.stringify(result));
+  return c.json({ success: true, totalFeeds: result.totalFeeds });
+});
+
 // Register slash commands (run once after deploy)
 app.post("/register", async (c) => {
+  if (!verifyAdminToken(c)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
   const commands = [
     {
       name: "feed",
@@ -97,6 +133,7 @@ export default {
     const discord = new DiscordAPI(env.DISCORD_BOT_TOKEN);
     const fetcher = new FeedFetcher(store, discord);
 
-    await fetcher.checkAllFeeds();
+    const result = await fetcher.checkAllFeeds();
+    console.log("Feed check triggered via cron:", JSON.stringify(result));
   },
 };
