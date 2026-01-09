@@ -2,9 +2,13 @@ import { decode } from "html-entities";
 import type { FeedItem } from "../types";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
+const DEFAULT_TEMPLATE = "**{title}** - {feed}\n{url}";
 
 export class DiscordAPI {
-  constructor(private botToken: string) {}
+  constructor(
+    private botToken: string,
+    private messageTemplate: string = DEFAULT_TEMPLATE
+  ) {}
 
   // Send message to a channel
   async sendMessage(channelId: string, content: string): Promise<void> {
@@ -33,7 +37,10 @@ export class DiscordAPI {
     feedTitle: string
   ): Promise<void> {
     const title = decode(item.title);
-    const content = `**${title}**\n${feedTitle}\n${item.link}`;
+    const content = this.messageTemplate
+      .replace(/\{title\}/g, title)
+      .replace(/\{feed\}/g, feedTitle)
+      .replace(/\{url\}/g, item.link);
     await this.sendMessage(channelId, content);
   }
 }

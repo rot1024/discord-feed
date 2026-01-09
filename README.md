@@ -60,6 +60,27 @@ npx wrangler secret put DISCORD_PUBLIC_KEY
 npx wrangler secret put DISCORD_BOT_TOKEN
 npx wrangler secret put DISCORD_APP_ID
 npx wrangler secret put ADMIN_TOKEN  # Optional: protects /register and /trigger
+npx wrangler secret put MESSAGE_TEMPLATE  # Optional: custom message format
+```
+
+#### Message Template
+
+You can customize the message format using `MESSAGE_TEMPLATE`. Available placeholders:
+- `{title}` - Article title
+- `{feed}` - Feed name
+- `{url}` - Article URL
+
+Default template:
+```
+**{title}** - {feed}
+{url}
+```
+
+Example custom template:
+```
+📰 {title}
+from {feed}
+{url}
 ```
 
 ### 5. Register Slash Commands

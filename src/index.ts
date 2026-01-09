@@ -17,7 +17,7 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 // Initialize services middleware
 app.use("*", async (c, next) => {
   const store = new FeedStore(c.env.KV);
-  const discord = new DiscordAPI(c.env.DISCORD_BOT_TOKEN);
+  const discord = new DiscordAPI(c.env.DISCORD_BOT_TOKEN, c.env.MESSAGE_TEMPLATE);
   const fetcher = new FeedFetcher(store, discord);
   c.set("store", store);
   c.set("discord", discord);
@@ -138,7 +138,7 @@ export default {
     _ctx: ExecutionContext
   ): Promise<void> {
     const store = new FeedStore(env.KV);
-    const discord = new DiscordAPI(env.DISCORD_BOT_TOKEN);
+    const discord = new DiscordAPI(env.DISCORD_BOT_TOKEN, env.MESSAGE_TEMPLATE);
     const fetcher = new FeedFetcher(store, discord);
 
     const result = await fetcher.checkAllFeeds();

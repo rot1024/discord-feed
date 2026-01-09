@@ -41,4 +41,5 @@ export interface Env {
   DISCORD_BOT_TOKEN: string;
   DISCORD_APP_ID: string;
   ADMIN_TOKEN?: string; // Optional token for /register and /trigger
+  MESSAGE_TEMPLATE?: string; // Optional message template with {title}, {feed}, {url}
 }
