@@ -173,7 +173,7 @@ export async function handleInteraction(
           const state = await store.getFeedState(url);
           let line = `${i + 1}. `;
           if (state?.title) {
-            line += `**${state.title}**\n   ${url}`;
+            line += `**${state.title}** ${url}`;
           } else {
             line += url;
           }
