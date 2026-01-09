@@ -87,7 +87,10 @@ export class FeedFetcher {
       const newItems = this.getNewItems(feed.items, lastItemId);
 
       if (newItems.length === 0) {
-        await this.store.setFeedState(url, currentFirstId, { title: feed.title });
+        // Only write if title changed or error needs to be cleared
+        if (state.title !== feed.title || state.error) {
+          await this.store.setFeedState(url, currentFirstId, { title: feed.title });
+        }
         return { url, channelId, status: "no_updates" };
       }
 

@@ -1,3 +1,4 @@
+import { decode } from "html-entities";
 import type { FeedItem } from "../types";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
@@ -31,7 +32,8 @@ export class DiscordAPI {
     item: FeedItem,
     feedTitle: string
   ): Promise<void> {
-    const content = `**${item.title}**\n${feedTitle}\n${item.link}`;
+    const title = decode(item.title);
+    const content = `**${title}**\n${feedTitle}\n${item.link}`;
     await this.sendMessage(channelId, content);
   }
 }
