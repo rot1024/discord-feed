@@ -13,6 +13,7 @@ export interface FeedIndex {
 // Feed state stored in KV
 export interface FeedState {
   lastItemId: string; // guid or link of the latest item
+  lastItemPubDate?: string; // ISO8601 pubDate of the latest item
   lastCheckedAt: string; // ISO8601
   title?: string; // Feed title
   error?: string; // Last error message if any

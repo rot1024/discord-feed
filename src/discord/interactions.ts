@@ -36,6 +36,22 @@ interface Interaction {
   };
 }
 
+// Format ISO date as relative time (e.g., "3h ago", "2d ago")
+function formatRelativeTime(isoDate: string): string {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffDay > 0) return `${diffDay}d ago`;
+  if (diffHour > 0) return `${diffHour}h ago`;
+  if (diffMin > 0) return `${diffMin}m ago`;
+  return "just now";
+}
+
 // Create JSON response
 function jsonResponse(data: object): Response {
   return new Response(JSON.stringify(data), {
@@ -179,6 +195,17 @@ export async function handleInteraction(
           }
           if (state?.error) {
             line += ` ⚠️ \`${state.error}\``;
+          }
+          // Show last checked and last item dates
+          if (state?.lastCheckedAt || state?.lastItemPubDate) {
+            const details: string[] = [];
+            if (state.lastCheckedAt) {
+              details.push(`checked: ${formatRelativeTime(state.lastCheckedAt)}`);
+            }
+            if (state.lastItemPubDate) {
+              details.push(`latest: ${formatRelativeTime(state.lastItemPubDate)}`);
+            }
+            line += `\n   └ ${details.join(" | ")}`;
           }
           lines.push(line);
         }

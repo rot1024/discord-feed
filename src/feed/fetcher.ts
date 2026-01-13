@@ -73,31 +73,36 @@ export class FeedFetcher {
 
       // First run - notify latest item and save state
       if (!lastItemId) {
-        const latestItem = feed.items[0];
+        // Find the item with the latest pubDate, or fall back to first item
+        const latestItem = this.findLatestItem(feed.items);
         try {
           await this.discord.sendFeedItem(channelId, latestItem, feed.title);
         } catch (error) {
           console.error(`Failed to send notification for ${latestItem.link}:`, error);
         }
-        await this.store.setFeedState(url, currentFirstId, { title: feed.title });
+        await this.store.setFeedState(url, latestItem.id, {
+          title: feed.title,
+          lastItemPubDate: latestItem.pubDate,
+        });
         return { url, channelId, status: "first_run", newItems: 1 };
       }
 
-      // Extract new items
-      const newItems = this.getNewItems(feed.items, lastItemId);
+      // Extract new items (sorted by pubDate, oldest first)
+      const newItems = this.getNewItems(feed.items, lastItemId, state.lastItemPubDate);
 
       if (newItems.length === 0) {
         // Only write if title changed or error needs to be cleared
         if (state.title !== feed.title || state.error) {
-          await this.store.setFeedState(url, currentFirstId, { title: feed.title });
+          await this.store.setFeedState(url, currentFirstId, {
+            title: feed.title,
+            lastItemPubDate: state.lastItemPubDate,
+          });
         }
         return { url, channelId, status: "no_updates" };
       }
 
-      // Notify new items (oldest first, max 5)
-      const itemsToNotify = newItems.slice(-5).reverse();
-
-      for (const item of itemsToNotify) {
+      // Notify all new items (already sorted oldest first)
+      for (const item of newItems) {
         try {
           await this.discord.sendFeedItem(channelId, item, feed.title);
           await sleep(500);
@@ -106,9 +111,13 @@ export class FeedFetcher {
         }
       }
 
-      // Save latest item ID
-      await this.store.setFeedState(url, feed.items[0].id, { title: feed.title });
-      return { url, channelId, status: "ok", newItems: itemsToNotify.length };
+      // Save latest item info (last item in sorted array is the newest)
+      const latestItem = newItems[newItems.length - 1];
+      await this.store.setFeedState(url, latestItem.id, {
+        title: feed.title,
+        lastItemPubDate: latestItem.pubDate,
+      });
+      return { url, channelId, status: "ok", newItems: newItems.length };
 
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -117,18 +126,54 @@ export class FeedFetcher {
     }
   }
 
-  // Extract new items (items after lastItemId)
-  private getNewItems(items: FeedItem[], lastItemId: string): FeedItem[] {
-    const newItems: FeedItem[] = [];
+  // Find the item with the latest pubDate
+  private findLatestItem(items: FeedItem[]): FeedItem {
+    let latest = items[0];
+    let latestTime = latest.pubDate ? new Date(latest.pubDate).getTime() : 0;
 
     for (const item of items) {
-      if (item.id === lastItemId) {
-        break;
+      if (item.pubDate) {
+        const itemTime = new Date(item.pubDate).getTime();
+        if (itemTime > latestTime) {
+          latest = item;
+          latestTime = itemTime;
+        }
       }
-      newItems.push(item);
     }
 
-    return newItems;
+    return latest;
+  }
+
+  // Extract new items based on pubDate (or ID as fallback)
+  private getNewItems(
+    items: FeedItem[],
+    lastItemId: string,
+    lastItemPubDate?: string
+  ): FeedItem[] {
+    const lastDate = lastItemPubDate ? new Date(lastItemPubDate).getTime() : null;
+
+    const newItems = items.filter((item) => {
+      // Skip if same ID as last item
+      if (item.id === lastItemId) {
+        return false;
+      }
+
+      // If we have both pubDates, use date comparison
+      if (lastDate && item.pubDate) {
+        const itemDate = new Date(item.pubDate).getTime();
+        return itemDate > lastDate;
+      }
+
+      // No reliable date info - include if ID is different
+      // This handles feeds without pubDate or first check after upgrade
+      return true;
+    });
+
+    // Sort by pubDate ascending (oldest first) for notification order
+    return newItems.sort((a, b) => {
+      if (!a.pubDate || !b.pubDate) return 0;
+      return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
+    });
   }
 }
 

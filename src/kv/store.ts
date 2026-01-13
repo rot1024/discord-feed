@@ -124,10 +124,11 @@ export class FeedStore {
   async setFeedState(
     url: string,
     lastItemId: string,
-    options?: { title?: string; error?: string }
+    options?: { title?: string; error?: string; lastItemPubDate?: string }
   ): Promise<void> {
     const state: FeedState = {
       lastItemId,
+      lastItemPubDate: options?.lastItemPubDate,
       lastCheckedAt: new Date().toISOString(),
       title: options?.title,
       error: options?.error,
