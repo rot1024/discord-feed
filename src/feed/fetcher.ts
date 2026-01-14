@@ -150,7 +150,17 @@ export class FeedFetcher {
     lastItemId: string,
     lastItemPubDate?: string
   ): FeedItem[] {
-    const lastDate = lastItemPubDate ? new Date(lastItemPubDate).getTime() : null;
+    // If lastItemPubDate is not available, try to find it from the feed
+    let lastDate: number | null = null;
+    if (lastItemPubDate) {
+      lastDate = new Date(lastItemPubDate).getTime();
+    } else {
+      // Look for lastItemId in current feed to get its pubDate
+      const lastItem = items.find((item) => item.id === lastItemId);
+      if (lastItem?.pubDate) {
+        lastDate = new Date(lastItem.pubDate).getTime();
+      }
+    }
 
     const newItems = items.filter((item) => {
       // Skip if same ID as last item
@@ -164,9 +174,9 @@ export class FeedFetcher {
         return itemDate > lastDate;
       }
 
-      // No reliable date info - include if ID is different
-      // This handles feeds without pubDate or first check after upgrade
-      return true;
+      // No reliable date info - be conservative and skip
+      // This prevents duplicate notifications during migration
+      return false;
     });
 
     // Sort by pubDate ascending (oldest first) for notification order
